@@ -21,6 +21,25 @@ jobs:
       - name: Download repository
         uses: actions/checkout@v4
 
+      - name: Test temple connectivity
+        shell: bash
+        run: |
+          failed=0
+          for family in 4 6; do
+            echo "Testing IPv${family}"
+            if curl "-${family}" --silent --show-error \
+              --connect-timeout 10 --max-time 20 \
+              --output /dev/null \
+              --write-out 'HTTP %{http_code}; remote IP %{remote_ip}; total %{time_total}s\n' \
+              https://tms.ap.gov.in/; then
+              echo "IPv${family}: HTTP response received"
+            else
+              echo "IPv${family}: connection failed"
+              failed=1
+            fi
+          done
+          exit "$failed"
+
       - name: Check 14 November 2026
         shell: pwsh
         run: |
