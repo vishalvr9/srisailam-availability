@@ -1,0 +1,33 @@
+name: Check Sparsha availability
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7-57/10 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sparsha-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Check 14 November 2026
+        shell: pwsh
+        run: |
+          $cutoff = [DateTimeOffset]::Parse("2026-11-15T00:00:00+05:30")
+          if ([DateTimeOffset]::UtcNow -ge $cutoff) {
+            Write-Output "Target date has passed; skipping availability checks."
+            exit 0
+          }
+
+          & ./check-sparsha.ps1 -Date "2026-11-14"
